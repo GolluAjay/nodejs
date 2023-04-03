@@ -1,6 +1,8 @@
 const Web3 = require('web3');
 const jwt = require('jsonwebtoken');
 const bytes = require('bytes');
+const fs = require('fs');
+const { uploadToIpfs } = require('../ipfs/ipfs');
 const abi = require('../web3/ABI')
 const bytes32 = require('bytes32'); 
 const {getHospitalName} = require('../controllers/donor')
@@ -38,11 +40,11 @@ RecipientController.signIn = async (req, res) => {
   };
 
   RecipientController.getDetails = async (req,res) => {
-    const {user} = req;
+    const {user} = req; 
     const response = {};
     try {
-      const {email,registered,authorised,ehrUploaded,matchFound,hospital} = await getRecipientMetaData(user);
-      const {id,addr,contactNumber,ehrTxId,organ} = await contract.methods.recipientDetails(bytes32({  input: bytes32({ input: user.userId })})).call();
+      const {id,email,registered,authorised,ehrUploaded,matchFound,hospital} = await getRecipientMetaData(user.userId);
+      const {addr,contactNumber,ehrTxId,organ} = await contract.methods.recipientDetails(bytes32({  input: bytes32({ input: user.userId })})).call();
       response["id"] = id;
       response["registered"] = registered;
       response["authorised"] = authorised;
@@ -54,9 +56,27 @@ RecipientController.signIn = async (req, res) => {
       response["ehrTxId"] = ehrTxId;
       response["organ"] = organ;
       response["matchFound"] = matchFound;
-      res.status(200).send(value);
+      res.status(200).send(response);
     } catch (err) {
       res.status(400).send(err.message);
+    }
+  };
+
+  RecipientController.uploadEHR = async (req, res) => {
+    try {
+      const { file } = req.files
+      const { user } = req;
+      const buffer = file.data
+      const filename = file.name
+      const filePath = `./uploads/${filename}`
+      fs.writeFileSync(filePath, buffer)
+      const response = await uploadToIpfs(filePath);
+      const {path} = response;
+      const value = await contract.methods.recipientEHRAdd(path,bytes32({  input: bytes32({ input: user.userId })})).send(options);
+      res.send(response)
+    } catch (err) {
+      console.error(err)
+      res.status(500).send('Error uploading file')
     }
   };
   
@@ -64,7 +84,7 @@ RecipientController.signIn = async (req, res) => {
     const {user} = req;
     const { address,organ,number } = req.body;
     try {
-      const value = await contract.methods.editRecipientDetails(user.userId,address,number,organ).send(options);
+      const value = await contract.methods.editRecipitentDetails(user.userId,address,number,organ).send(options);
       console.log(value);
       res.status(200).send({message:"success"});
     } catch (err) {
@@ -73,8 +93,8 @@ RecipientController.signIn = async (req, res) => {
     }
   }
 
-  const getRecipientMetaData = (user) => {
-    return contract.methods.recipients(bytes32({ input: bytes32({ input: user.userId })})).call();
+  const getRecipientMetaData = (id) => {
+    return contract.methods.recipients(bytes32({ input: bytes32({ input: id })})).call();
   }
 
-module.exports = RecipientController;
+module.exports = { RecipientController, getRecipientMetaData };

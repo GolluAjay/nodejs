@@ -1,12 +1,13 @@
 const express = require('express');
-const recipientController = require('../controllers/recipient');
+const { RecipientController } = require('../controllers/recipient');
 const authenticateToken = require('../middleWare/tokenVerification');
 
 const router = express.Router();
 
-router.post('/signUp', recipientController.signUp);
-router.post('/signIn', recipientController.signIn);
-router.post("/edit",authenticateToken,recipientController.editDetails);
-router.get("/recipientDetails",authenticateToken,recipientController.getDetails);
+router.post('/signUp', RecipientController.signUp);
+router.post('/signIn', RecipientController.signIn);
+router.post("/editDetails",authenticateToken,RecipientController.editDetails);
+router.post("/upload",authenticateToken,RecipientController.uploadEHR);
+router.get("/recipientDetails",authenticateToken,RecipientController.getDetails);
 
 module.exports = router;

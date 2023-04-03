@@ -1,4 +1,4 @@
-const abi = [
+const abi =   [
   {
     "inputs": [],
     "stateMutability": "nonpayable",
@@ -627,6 +627,26 @@ const abi = [
   {
     "inputs": [
       {
+        "internalType": "bytes32",
+        "name": "id",
+        "type": "bytes32"
+      }
+    ],
+    "name": "getHospitalRecipients",
+    "outputs": [
+      {
+        "internalType": "bytes32[]",
+        "name": "",
+        "type": "bytes32[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function",
+    "constant": true
+  },
+  {
+    "inputs": [
+      {
         "internalType": "string",
         "name": "email",
         "type": "string"
@@ -670,11 +690,6 @@ const abi = [
       {
         "internalType": "bytes32",
         "name": "id",
-        "type": "bytes32"
-      },
-      {
-        "internalType": "bytes32",
-        "name": "hId",
         "type": "bytes32"
       }
     ],
@@ -905,11 +920,6 @@ const abi = [
       {
         "internalType": "bytes32",
         "name": "id",
-        "type": "bytes32"
-      },
-      {
-        "internalType": "bytes32",
-        "name": "hId",
         "type": "bytes32"
       }
     ],
