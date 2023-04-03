@@ -88,21 +88,31 @@ const getHospitalDonorsIds = (user) => {
 
 const addDetailsToHospitalDonors = (list) => {
   return list.map(async (Item) => {
+    const response = {};
     const details = await getHospitalDonorDetails(Item["id"]);
-    console.log(Item);
-    console.log(details);
+    const {addr,email,contactNumber,ehrTxId} =details;
+    const {id,registered,authorised,ehrUploaded,hospital} = Item;
     try {
       const organList = await donorOrganList(Item["id"]);
       const matchList = await matchOrganList(Item["id"]);
-      Item.organList = organList;
-      Item.matchList = matchList;
+      response["id"] = id;
+      response["registered"] = registered;
+      response["authorised"] = authorised;
+      response["ehrUploaded"] = ehrUploaded;
+      response["hospital"] = hospital;
+      response["addr"] = addr;
+      response["email"] = email;
+      response["contactNumber"] = contactNumber;
+      response["ehrTxId"] = ehrTxId;
+      response["organList"] = organList;
+      response["matchOrgans"] = matchList;
     } catch (error) {
       console.log(error.message)
     }
-    finally{
-      Item.details = details;
-    }
-    return Item;
+    // finally{
+    //   Item.details = details;
+    // }
+    return response;
   });
 };
 

@@ -52,7 +52,7 @@ DonorController.signIn = async (req, res) => {
       response["registered"] = registered;
       response["authorised"] = authorised;
       response["ehrUploaded"] = ehrUploaded;
-      response["hospital"] = hospital;
+      response["hospital"] = await getHospitalName(hospital);
       response["addr"] = addr;
       response["email"] = email;
       response["contactNumber"] = contactNumber;
@@ -69,7 +69,6 @@ DonorController.signIn = async (req, res) => {
     try {
       const { file } = req.files
       const { user } = req;
-      console.log(user);
       const buffer = file.data
       const filename = file.name
       const filePath = `./uploads/${filename}`
@@ -94,13 +93,16 @@ DonorController.signIn = async (req, res) => {
   // }
 
   DonorController.setDetails = async (req,res) => {
+    console.log(req.body);
     const {user} = req;
     const { address,list,number } = req.body;
     try {
       const value = await contract.methods.editDonorDetails(user.userId,address,number,list).send(options);
+      console.log(value);
       res.status(200).send({message:"success"});
     } catch (err) {
       res.status(400).send(err.message);
+      console.log(err);
     }
   };
   
@@ -114,6 +116,10 @@ DonorController.signIn = async (req, res) => {
   
   const matchOrganList = (id) => {
     return contract.methods.getMatchedOrganList(bytes32({  input: bytes32({ input: id })})).call();
+  }
+
+  const getHospitalName = (id) => {
+    return contract.methods.getHospitalName(bytes32({  input: bytes32({ input: id })})).call();
   }
 
 module.exports ={ DonorController , getDonorMetaData, donorOrganList, matchOrganList};
