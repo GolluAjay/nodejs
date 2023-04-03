@@ -93,7 +93,6 @@ DonorController.signIn = async (req, res) => {
   // }
 
   DonorController.setDetails = async (req,res) => {
-    console.log(req.body);
     const {user} = req;
     const { address,list,number } = req.body;
     try {
@@ -122,4 +121,4 @@ DonorController.signIn = async (req, res) => {
     return contract.methods.getHospitalName(bytes32({  input: bytes32({ input: id })})).call();
   }
 
-module.exports ={ DonorController , getDonorMetaData, donorOrganList, matchOrganList};
+module.exports ={ DonorController , getDonorMetaData, donorOrganList, matchOrganList, getHospitalName};

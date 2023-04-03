@@ -6,6 +6,7 @@ const router = express.Router();
 
 router.post('/signUp', recipientController.signUp);
 router.post('/signIn', recipientController.signIn);
-router.get('/metaData',authenticateToken,recipientController.metaData)
+router.post("/edit",authenticateToken,recipientController.editDetails);
+router.get("/recipientDetails",authenticateToken,recipientController.getDetails);
 
 module.exports = router;
