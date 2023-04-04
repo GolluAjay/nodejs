@@ -5,7 +5,9 @@ const fs = require('fs');
 const { uploadToIpfs } = require('../ipfs/ipfs');
 const abi = require('../web3/ABI')
 const bytes32 = require('bytes32'); 
-const {getHospitalName} = require('../controllers/donor')
+const {getHospitalName} = require('../controllers/donor');
+const { response } = require('express');
+const { getDonorMetaData, donorOrganList, matchOrganList } = require("./donor");
 require('dotenv').config();
 const provider = new Web3.providers.HttpProvider("http://127.0.0.1:7545");
 const web3 = new Web3(provider);
@@ -85,10 +87,58 @@ RecipientController.signIn = async (req, res) => {
     const { address,organ,number } = req.body;
     try {
       const value = await contract.methods.editRecipitentDetails(user.userId,address,number,organ).send(options);
+      match(user.userId,organ);
+      matchOther(user.userId,organ);
       console.log(value);
       res.status(200).send({message:"success"});
     } catch (err) {
       res.status(400).send(err.message);
+      console.log(err);
+    }
+  }
+
+  const match = async (id, organ) => {
+    try {
+      const value = await contract.methods.matchOrgans(bytes32({  input: bytes32({ input: id })}),organ).send(options);
+      console.log(value);
+    } catch (err) {
+      console.log(err);
+    }
+  }
+
+  RecipientController.donorMatch = async (req,res) => {
+    const {user} = req;
+    const response = {};
+    try {
+      const value = await contract.methods.recipientMatches(bytes32({  input: bytes32({ input: user.userId })})).call();
+      
+      const {id,registered,authorised,ehrUploaded,hospital} = await getDonorMetaData(value);
+      const {addr,email,contactNumber,ehrTxId} = await contract.methods.DonorDetails(bytes32({  input: bytes32({ input: value })})).call();
+      const organList = await donorOrganList(value);
+      const matchOrgans = await matchOrganList(value);
+      response["id"] = id;
+      response["registered"] = registered;
+      response["authorised"] = authorised;
+      response["ehrUploaded"] = ehrUploaded;
+      response["hospital"] = await getHospitalName(hospital);
+      response["addr"] = addr;
+      response["email"] = email;
+      response["contactNumber"] = contactNumber;
+      response["ehrTxId"] = ehrTxId;
+      response["organList"] = organList;
+      response["matchOrgans"] = matchOrgans;
+      res.status(200).send(response);
+    } catch (err) {
+      res.status(400).send(err.message);
+      console.log(err);
+    }
+  }
+
+  const matchOther = async (id,organ) => {
+    try {
+      const value = await contract.methods.matchOthersOrgans(bytes32({  input: bytes32({ input: id })}),organ).send(options);
+      console.log(value);
+    } catch (err) {
       console.log(err);
     }
   }

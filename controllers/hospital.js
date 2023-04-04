@@ -77,7 +77,7 @@ hospitalController.getDonors = async (req, res) => {
   }
 };
 
-hospitalController.authorize = async (req, res) => {
+hospitalController.donorAuthorize = async (req, res) => {
   const { user } = req;
   const donorId = req.params.id;
   try {
@@ -88,11 +88,33 @@ hospitalController.authorize = async (req, res) => {
   }
 }
 
-hospitalController.unauthorize = async (req, res) => {
+hospitalController.donorUnauthorize = async (req, res) => {
   const { user } = req;
   const donorId = req.params.id;
   try {
     await contract.methods.unauthoriseDonor(bytes32({ input: bytes32({ input: donorId }) })).send(options);
+    res.status(200).send({"message":"unauthorize"});
+  } catch (err) {
+    res.status(400).send(err.message);
+  }
+}
+
+hospitalController.recipientAuthorize = async (req, res) => {
+  const { user } = req;
+  const donorId = req.params.id;
+  try {
+    await contract.methods.authorisedRecipient(bytes32({ input: bytes32({ input: donorId }) }), bytes32({ input: bytes32({ input: user.userId }) })).send(options);
+    res.status(200).send({"message":"authorize"});
+  } catch (err) {
+    res.status(400).send(err.message);
+  }
+}
+
+hospitalController.recipientUnauthorize = async (req, res) => {
+  const { user } = req;
+  const donorId = req.params.id;
+  try {
+    await contract.methods.unauthoriseRecipient(bytes32({ input: bytes32({ input: donorId }) })).send(options);
     res.status(200).send({"message":"unauthorize"});
   } catch (err) {
     res.status(400).send(err.message);
@@ -112,6 +134,18 @@ hospitalController.getHospitalNames = async (req, res) => {
 const getHospitalDonorsIds = (user) => {
   return contract.methods
     .getHospitalDonors(bytes32({ input: bytes32({ input: user.userId }) }))
+    .call();
+};
+
+const getDonorMatchesIds = (user) => {
+  return contract.methods
+    .getDonorMatches()
+    .call();
+};
+
+const getRecipientMatchesIds = (user) => {
+  return contract.methods
+    .getRecipientMatchs()
     .call();
 };
 
@@ -190,6 +224,39 @@ const addDetailsToHospitalDonors = (list) => {
 //     res.status(400).send(err.message);
 //   } 
 // }
+
+ hospitalController.donorMatches = async (req,res)=> {
+  const response = {};
+  const { user } = req;
+  try {
+    const value = await getDonorMatchesIds(user);
+    response.count = value.length;
+    const donorsWithMetadata = await Promise.all(getDonorMetadataList(value));
+    response.list = await Promise.all(
+      addDetailsToHospitalDonors(donorsWithMetadata)
+    );
+    res.status(200).send(response);
+  } catch (err) {
+    res.status(400).send(err.message);
+  }
+};
+
+
+hospitalController.recipientMatches = async (req,res)=> {
+  const response = {};
+  const { user } = req;
+  try {
+    const value = await getRecipientMatchesIds(user);
+    response.count = value.length;
+    const recipientsWithMetadata = await Promise.all(getRecipientMetadataList(value));
+    response.list = await Promise.all(
+      addDetailsToHospitalRecipients(recipientsWithMetadata)
+    );
+    res.status(200).send(response);
+  } catch (err) {
+    res.status(400).send(err.message);
+  }
+};
 
 const getHospitalDonorDetails = (id) => {
   return contract.methods
